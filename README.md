@@ -1,12 +1,12 @@
 # UMD Dining Unofficial Guide — RAG System
 
-A Retrieval-Augmented Generation (RAG) system that makes unofficial student knowledge about UMD dining halls searchable and answerable. Ask plain-language questions about food quality, vegan/vegetarian options, allergens, crowding, and food safety — get grounded, cited answers drawn from real documents.
+A Retrieval-Augmented Generation (RAG) system that makes unofficial student knowledge about UMD dining halls searchable and answerable. Ask plain-language questions about food quality, vegan/vegetarian options, allergens, crowding, and food safety; get grounded, cited answers drawn from real documents.
 
 ---
 
 ## Domain and Document Sources
 
-UMD dining halls (251 North, South Campus, and Yahentamitsi) are a daily necessity for thousands of resident students, yet the official Dining Services website only publishes menus, hours, and nutritional labels. It says nothing about whether vegetarian labels can be trusted, which hall is dangerously crowded at noon, or what to do if you have a serious food allergy. That knowledge lives in Reddit threads, student newspaper columns, and word of mouth — scattered and invisible to incoming students who need it most.
+UMD dining halls (251 North, South Campus, and Yahentamitsi) are a daily necessity for thousands of resident students, yet the official Dining Services website only publishes menus, hours, and nutritional labels. It says nothing about whether vegetarian labels can be trusted, which hall is dangerously crowded at noon, or what to do if you have a serious food allergy. That knowledge lives in Reddit threads, student newspaper columns, and word of mouth scattered and invisible to incoming students who need it most.
 
 **Sources (10 documents):**
 
@@ -17,11 +17,11 @@ UMD dining halls (251 North, South Campus, and Yahentamitsi) are a daily necessi
 | `reddit_dining_crowded.txt` | r/UMD thread on crowding at dining halls |
 | `reddit_south_unsafe.txt` | r/UMD thread on food safety concerns at South Campus |
 | `reddit_dining_questions.txt` | r/UMD general dining questions thread |
-| `dbk_vegetarian_yahentamitsi.txt` | Diamondback — vegetarian mislabeling at Yahentamitsi (2022) |
-| `dbk_dining_hours_crowding.txt` | Diamondback — inconsistent hours and overcrowding (2024) |
-| `dbk_food_safety_violations.txt` | Diamondback — salmonella and health violations (2019) |
-| `umd_dining_allergy_page.txt` | UMD Dining Services — allergy/special diets policy |
-| `umd_dining_faqs.txt` | UMD Dining Services — FAQ page |
+| `dbk_vegetarian_yahentamitsi.txt` | Diamondback: vegetarian mislabeling at Yahentamitsi (2022) |
+| `dbk_dining_hours_crowding.txt` | Diamondback: inconsistent hours and overcrowding (2024) |
+| `dbk_food_safety_violations.txt` | Diamondback: salmonella and health violations (2019) |
+| `umd_dining_allergy_page.txt` | UMD Dining Services: allergy/special diets policy |
+| `umd_dining_faqs.txt` | UMD Dining Services: FAQ page |
 
 ---
 
@@ -29,9 +29,9 @@ UMD dining halls (251 North, South Campus, and Yahentamitsi) are a daily necessi
 
 **Chunk size: 400 characters. Overlap: 80 characters.**
 
-The corpus is mixed: Reddit comments are 1–5 sentences of opinion; Diamondback articles are multi-paragraph journalism with quotes; official UMD pages are structured policy text. At 400 characters, a single Reddit comment fits in one chunk with context intact. For longer articles, 400 characters captures roughly 2–3 sentences — enough to hold a complete thought (e.g., a student quote plus the surrounding sentence that names the dining hall).
+The corpus is mixed: Reddit comments are 1–5 sentences of opinion; Diamondback articles are multi-paragraph journalism with quotes; official UMD pages are structured policy text. At 400 characters, a single Reddit comment fits in one chunk with context intact. For longer articles, 400 characters captures roughly 2–3 sentences, enough to hold a complete thought (e.g., a student quote plus the surrounding sentence that names the dining hall).
 
-Smaller chunks (200 chars) would strip context — a quote like "There was chicken in it" is meaningless without the surrounding sentence naming the dining hall and dietary restriction. Larger chunks (600+ chars) merge distinct claims from Diamondback articles, diluting the semantic signal.
+Smaller chunks (200 chars) would strip context, a quote like "There was chicken in it" is meaningless without the surrounding sentence naming the dining hall and dietary restriction. Larger chunks (600+ chars) merge distinct claims from Diamondback articles, diluting the semantic signal.
 
 80-character overlap preserves context across quote boundaries in journalism, where attribution often comes after the quote.
 
@@ -60,7 +60,7 @@ Smaller chunks (200 chars) would strip context — a quote like "There was chick
 
 ## Embedding Model
 
-**Model:** `all-MiniLM-L6-v2` via sentence-transformers. Runs locally — no API key, no rate limits, no cost.
+**Model:** `all-MiniLM-L6-v2` via sentence-transformers. Runs locally; no API key, no rate limits, no cost.
 
 **Production tradeoffs:** For a real deployment I'd evaluate OpenAI's `text-embedding-3-small` (higher accuracy, low cost per token) vs. a locally-hosted model (zero cost, privacy-preserving for student data). I'd also consider context length: `all-MiniLM-L6-v2` has a 256-token limit, fine for 400-character chunks but would need upgrading if chunk sizes grew. For multilingual support (relevant at UMD given its international student population), `paraphrase-multilingual-MiniLM-L12-v2` would be worth testing.
 
@@ -71,27 +71,27 @@ Smaller chunks (200 chars) would strip context — a quote like "There was chick
 **Query 1: "vegetarian food mislabeled at Yahentamitsi"**
 
 Top chunks returned:
-- `dbk_vegetarian_yahentamitsi.txt` (distance: 0.2384) — student quotes about mislabeled pasta dishes containing chicken
-- `umd_dining_faqs.txt` (distance: 0.3697) — FAQ on vegetarian/vegan availability
-- `dbk_vegetarian_yahentamitsi.txt` (distance: 0.3728) — article intro paragraph
+- `dbk_vegetarian_yahentamitsi.txt` (distance: 0.2384): student quotes about mislabeled pasta dishes containing chicken
+- `umd_dining_faqs.txt` (distance: 0.3697): FAQ on vegetarian/vegan availability
+- `dbk_vegetarian_yahentamitsi.txt` (distance: 0.3728): article intro paragraph
 
 Why relevant: The top result directly contains student accounts of mislabeling incidents at Yahentamitsi, which is exactly what the query asks about. Distance of 0.23 indicates a strong semantic match.
 
 **Query 2: "which dining hall is most crowded during lunch"**
 
 Top chunks returned:
-- `dbk_dining_hours_crowding.txt` (distance: 0.3619) — student observation about peak hour seating
-- `dbk_dining_hours_crowding.txt` (distance: 0.3693) — extended hours argument
-- `reddit_dining_crowded.txt` (distance: 0.3825) — Reddit thread on crowding
+- `dbk_dining_hours_crowding.txt` (distance: 0.3619): student observation about peak hour seating
+- `dbk_dining_hours_crowding.txt` (distance: 0.3693): extended hours argument
+- `reddit_dining_crowded.txt` (distance: 0.3825): Reddit thread on crowding
 
 Why relevant: Both the Diamondback article and the Reddit thread directly address crowding at peak hours. Multiple sources converge on the same topic.
 
 **Query 3: "food allergy options Purple Zone"**
 
 Top chunks returned:
-- `umd_dining_allergy_page.txt` (distance: 0.2065) — special diets support info
-- `umd_dining_allergy_page.txt` (distance: 0.2799) — Purple Zone hours and allergen-free description
-- `umd_dining_faqs.txt` (distance: 0.3054) — FAQ on allergy accommodations
+- `umd_dining_allergy_page.txt` (distance: 0.2065): special diets support info
+- `umd_dining_allergy_page.txt` (distance: 0.2799): Purple Zone hours and allergen-free description
+- `umd_dining_faqs.txt` (distance: 0.3054): FAQ on allergy accommodations
 
 Why relevant: The official allergy page is the authoritative source on the Purple Zone. Distance scores under 0.30 indicate very strong matches for this query.
 
@@ -103,7 +103,7 @@ The system prompt explicitly instructs the LLM to answer **only** from retrieved
 
 > "Answer the user's question using ONLY the information provided in the documents below. Do NOT use any outside knowledge or general information not present in the provided documents. Always cite which source(s) your answer comes from."
 
-If documents don't contain enough information, the system is instructed to say: "I don't have enough information in my documents to answer that question." This was observed in practice when asking about peak-hour crowding — the system declined rather than hallucinating.
+If documents don't contain enough information, the system is instructed to say: "I don't have enough information in my documents to answer that question." This was observed in practice when asking about peak-hour crowding, the system declined rather than hallucinating.
 
 Source attribution is programmatically guaranteed: retrieved source filenames are extracted from ChromaDB metadata and displayed in the "Retrieved From" panel regardless of what the LLM generates.
 
@@ -139,7 +139,7 @@ The interface is a Gradio web app running at `http://localhost:7860`.
 
 **Input:** A text box labeled "Your Question" with example questions pre-loaded at the bottom.
 
-**Output:** Two panels — "Answer" (the grounded LLM response with inline source citations) and "Retrieved From" (a bulleted list of source filenames).
+**Output:** Two panels "Answer" (the grounded LLM response with inline source citations) and "Retrieved From" (a bulleted list of source filenames).
 
 **Sample interaction:**
 
@@ -158,7 +158,7 @@ The interface is a Gradio web app running at `http://localhost:7860`.
 
 **Question 1:** Have students reported vegetarian food being mislabeled at UMD dining halls?
 
-- **Expected:** Yes — specifically at Yahentamitsi, pasta dishes labeled vegetarian contained chicken. Dining Services acknowledged the issue.
+- **Expected:** Yes, specifically at Yahentamitsi, pasta dishes labeled vegetarian contained chicken. Dining Services acknowledged the issue.
 - **System response:** Correctly cited mislabeling incidents at Yahentamitsi with student quotes and source attribution.
 - **Accuracy:** Accurate
 
@@ -182,7 +182,7 @@ The interface is a Gradio web app running at `http://localhost:7860`.
 
 **Question 4:** Have there been any food safety or health incidents at UMD dining?
 
-- **Expected:** Yes — salmonella linked to on-campus eatery (2019), moldy bread and worm-infested fruit posted on r/UMD.
+- **Expected:** Yes, salmonella linked to on-campus eatery (2019), moldy bread and worm-infested fruit posted on r/UMD.
 - **System response:** Correctly cited salmonella incident and Reddit food safety posts with source attribution.
 - **Accuracy:** Accurate
 
@@ -190,7 +190,7 @@ The interface is a Gradio web app running at `http://localhost:7860`.
 
 **Question 5:** What do students say about vegan food options at UMD dining halls?
 
-- **Expected:** Mixed — official dining offers vegan options but Reddit threads reflect frustration with limited variety and inconsistent labeling.
+- **Expected:** Mixed, official dining offers vegan options but Reddit threads reflect frustration with limited variety and inconsistent labeling.
 - **System response:** Correctly synthesized official vegan options with student Reddit concerns about variety and mislabeling.
 - **Accuracy:** Accurate
 
@@ -204,7 +204,7 @@ The system returned "I don't have enough information" despite relevant chunks be
 
 **How the spec helped:** Writing the chunking strategy section before touching any code forced a concrete decision (400 chars, 80 overlap) that I could defend. When `embed.py` had issues, I could trace back to exactly what the spec said retrieval should look like and verify against it.
 
-**How implementation diverged:** The spec suggested a single uniform chunking strategy, but in practice the Reddit documents produced very few chunks (some files only 3–4 chunks) due to their short length. In a future version I would use smaller chunks (200 chars) for Reddit files and larger (500 chars) for Diamondback articles — a per-source-type strategy rather than uniform.
+**How implementation diverged:** The spec suggested a single uniform chunking strategy, but in practice the Reddit documents produced very few chunks (some files only 3–4 chunks) due to their short length. In a future version I would use smaller chunks (200 chars) for Reddit files and larger (500 chars) for Diamondback articles, a per-source-type strategy rather than uniform.
 
 ---
 
