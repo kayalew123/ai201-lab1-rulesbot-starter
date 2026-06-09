@@ -156,18 +156,49 @@ The interface is a Gradio web app running at `http://localhost:7860`.
 
 ## Evaluation Report
 
-|---|----------|----------------|-----------------|----------|
-| 1 | Have students reported vegetarian food being mislabeled at UMD dining halls? | Yes — specifically at Yahentamitsi, pasta dishes labeled vegetarian contained chicken. Dining Services acknowledged the issue. | Correctly cited mislabeling incidents at Yahentamitsi with student quotes and source attribution. |  Accurate |
-| 2 | What allergen-free options does UMD dining offer for students with food allergies? | Purple Zone at 251 North and South Campus (certified free from 8 allergens). Purple Freezer at each hall. Ask manager not servers. | Correctly described Purple Zone, Purple Freezer, and advised asking manager on duty. | Accurate |
-| 3 | Which UMD dining hall gets the most crowded during peak hours? | All three halls get overcrowded at lunch; 251 North closes early on weekends pushing students to other halls. | Returned "I don't have enough information" — retrieval pulled crowding chunks but LLM couldn't synthesize a specific answer. | Inaccurate |
-| 4 | Have there been any food safety or health incidents at UMD dining? | Yes — salmonella linked to on-campus eatery (2019), moldy bread and worm-infested fruit posted on r/UMD. | Correctly cited salmonella incident and Reddit food safety posts with source attribution. | ✅ Accurate |
-| 5 | What do students say about vegan food options at UMD dining halls? | Mixed — official dining offers vegan options but Reddit threads reflect frustration with limited variety and inconsistent labeling. | Correctly synthesized official vegan options with student Reddit concerns about variety and mislabeling. |  Accurate |
+**Question 1:** Have students reported vegetarian food being mislabeled at UMD dining halls?
+
+- **Expected:** Yes — specifically at Yahentamitsi, pasta dishes labeled vegetarian contained chicken. Dining Services acknowledged the issue.
+- **System response:** Correctly cited mislabeling incidents at Yahentamitsi with student quotes and source attribution.
+- **Accuracy:** Accurate
+
+---
+
+**Question 2:** What allergen-free options does UMD dining offer for students with food allergies?
+
+- **Expected:** Purple Zone at 251 North and South Campus (certified free from 8 allergens). Purple Freezer at each hall. Ask manager not servers.
+- **System response:** Correctly described Purple Zone, Purple Freezer, and advised asking manager on duty.
+- **Accuracy:** Accurate
+
+---
+
+**Question 3:** Which UMD dining hall gets the most crowded during peak hours?
+
+- **Expected:** All three halls get overcrowded at lunch; 251 North closes early on weekends pushing students to other halls.
+- **System response:** Returned "I don't have enough information" — retrieval pulled crowding chunks but LLM couldn't synthesize a specific answer.
+- **Accuracy:** Inaccurate
+
+---
+
+**Question 4:** Have there been any food safety or health incidents at UMD dining?
+
+- **Expected:** Yes — salmonella linked to on-campus eatery (2019), moldy bread and worm-infested fruit posted on r/UMD.
+- **System response:** Correctly cited salmonella incident and Reddit food safety posts with source attribution.
+- **Accuracy:** Accurate
+
+---
+
+**Question 5:** What do students say about vegan food options at UMD dining halls?
+
+- **Expected:** Mixed — official dining offers vegan options but Reddit threads reflect frustration with limited variety and inconsistent labeling.
+- **System response:** Correctly synthesized official vegan options with student Reddit concerns about variety and mislabeling.
+- **Accuracy:** Accurate
+
+---
 
 **Failure case analysis — Question 3:**
 
-The system returned "I don't have enough information" despite relevant chunks being retrieved (distance scores 0.36–0.39). The failure occurred at the generation stage, not retrieval. The retrieved chunks discussed crowding in general terms (seating shortage, peak hours) but no single chunk made a direct comparison stating which specific hall is *most* crowded. The LLM correctly declined rather than fabricating a ranking not supported by the documents. This is appropriate behavior but represents a gap in document coverage — adding more Reddit content specifically comparing crowding across halls would fix this.
-
----
+The system returned "I don't have enough information" despite relevant chunks being retrieved (distance scores 0.36–0.39). The failure occurred at the generation stage, not retrieval. The retrieved chunks discussed crowding in general terms (seating shortage, peak hours) but no single chunk made a direct comparison stating which specific hall is most crowded. The LLM correctly declined rather than fabricating a ranking not supported by the documents. This is appropriate behavior but represents a gap in document coverage — adding more Reddit content specifically comparing crowding across halls would fix this.
 
 ## Spec Reflection
 
