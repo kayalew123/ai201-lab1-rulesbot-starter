@@ -5,7 +5,7 @@ Loads .txt files from the documents/ folder, cleans them, and splits into chunks
 
 import os
 import re
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def load_documents(docs_dir="documents"):
