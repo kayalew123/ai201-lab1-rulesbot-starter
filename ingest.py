@@ -1,70 +1,83 @@
+"""
+ingest.py — Document ingestion and chunking pipeline
+Loads .txt files from the documents/ folder, cleans them, and splits into chunks.
+"""
+
 import os
-from config import DOCS_PATH
+import re
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
-def load_documents():
-    """Load all .txt rule documents from the docs folder."""
+def load_documents(docs_dir="documents"):
     documents = []
-    for filename in sorted(os.listdir(DOCS_PATH)):
+    if not os.path.exists(docs_dir):
+        raise FileNotFoundError(f"Documents directory '{docs_dir}' not found.")
+
+    for filename in os.listdir(docs_dir):
         if filename.endswith(".txt"):
-            filepath = os.path.join(DOCS_PATH, filename)
+            filepath = os.path.join(docs_dir, filename)
             with open(filepath, "r", encoding="utf-8") as f:
-                text = f.read()
-            game_name = filename.replace(".txt", "").replace("_", " ").title()
-            documents.append({
-                "game": game_name,
-                "filename": filename,
-                "text": text,
-            })
-    print(f"Loaded {len(documents)} rule document(s): {[d['game'] for d in documents]}")
+                raw_text = f.read()
+            cleaned = clean_text(raw_text)
+            if cleaned.strip():
+                documents.append({
+                    "text": cleaned,
+                    "source": filename
+                })
+                print(f"Loaded: {filename} ({len(cleaned)} chars)")
+
+    print(f"\nTotal documents loaded: {len(documents)}")
     return documents
 
 
-def chunk_document(text, game_name):
-    """
-    Split a rule document into chunks ready for embedding.
+def clean_text(text):
+    text = re.sub(r'http\S+', '', text)
+    text = re.sub(r'&\w+;', ' ', text)
+    lines = text.splitlines()
+    cleaned_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if len(stripped) > 20 or stripped.startswith(('Q:', 'A:', 'Source:', 'POST:', 'COMMENTS:')):
+            cleaned_lines.append(stripped)
+    text = "\n".join(cleaned_lines)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
 
-    This function is already implemented — read through it and the inline
-    comments before moving on. The decisions made here directly shape what
-    retrieval returns in Milestones 2 and 3, so it's worth understanding
-    before you build on top of it.
 
-    Strategy: character-based sliding window with overlap.
-      - chunk_size = 300 characters: long enough to carry the semantic
-        meaning of a single rule, short enough to return targeted results
-      - overlap = 50 characters: duplicates a small window of text at each
-        boundary so a rule that spans two chunks can still be retrieved intact
-      - min_length = 50 characters: filters out whitespace artifacts and
-        very short fragments that add noise without useful semantic content
+def chunk_documents(documents, chunk_size=400, chunk_overlap=80):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ". ", " ", ""]
+    )
 
-    Returns a list of dicts, each with:
-      - "text"     : the chunk text (str)
-      - "game"     : the game name, e.g. "Catan" (str)
-      - "chunk_id" : a unique identifier, e.g. "catan_0", "catan_1" (str)
-    """
-    chunk_size = 300
-    overlap = 50
-    min_length = 50
+    all_chunks = []
+    for doc in documents:
+        chunks = splitter.split_text(doc["text"])
+        for i, chunk in enumerate(chunks):
+            if len(chunk.strip()) >= 50:
+                all_chunks.append({
+                    "text": chunk.strip(),
+                    "source": doc["source"],
+                    "chunk_index": i
+                })
 
-    chunks = []
-    prefix = game_name.lower().replace(" ", "_")
-    counter = 0
+    print(f"Total chunks produced: {len(all_chunks)}")
+    return all_chunks
 
-    start = 0
-    while start < len(text):
-        end = start + chunk_size
-        chunk_text = text[start:end].strip()
 
-        if len(chunk_text) >= min_length:
-            chunks.append({
-                "text": chunk_text,
-                "game": game_name,
-                "chunk_id": f"{prefix}_{counter}",
-            })
-            counter += 1
+def inspect_chunks(chunks, n=5):
+    import random
+    sample = random.sample(chunks, min(n, len(chunks)))
+    print("\n--- CHUNK INSPECTION ---")
+    for i, chunk in enumerate(sample):
+        print(f"\nChunk {i+1} (source: {chunk['source']}, index: {chunk['chunk_index']}):")
+        print(f"Length: {len(chunk['text'])} chars")
+        print(f"Text: {chunk['text']}")
+        print("-" * 60)
 
-        # Advance by (chunk_size - overlap) so the next chunk shares
-        # `overlap` characters with the tail of this one.
-        start += chunk_size - overlap
 
-    return chunks
+if __name__ == "__main__":
+    documents = load_documents("documents")
+    chunks = chunk_documents(documents)
+    inspect_chunks(chunks, n=5)
